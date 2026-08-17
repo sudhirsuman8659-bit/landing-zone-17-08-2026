@@ -1,4 +1,4 @@
 
 variable "network_interface" {
-  
+
 }

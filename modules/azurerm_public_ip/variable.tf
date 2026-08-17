@@ -1,3 +1,3 @@
 variable "public_ip" {
-  
+
 }
