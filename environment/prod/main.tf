@@ -33,7 +33,7 @@ module "nic" {
 
   network_interface = var.network_interface
 
-  depends_on = [module.public_ip]
+  depends_on = [module.subnet, module.public_ip]
 
 }
 
