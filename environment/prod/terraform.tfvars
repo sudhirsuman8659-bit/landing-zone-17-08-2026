@@ -43,9 +43,9 @@ network_interface = {
     name                = "example-nic"
     location            = "centralindia"
     resource_group_name = "rg-sks"
-    subnet_name ="frontend-subnet"
-    vnet_name = "vnet-sks"
-    pip_name = "acceptanceTestPublicIp1"
+    subnet_name         = "frontend-subnet"
+    vnet_name           = "vnet-sks"
+    pip_name            = "acceptanceTestPublicIp1"
   }
 }
 vartual_machine = {
