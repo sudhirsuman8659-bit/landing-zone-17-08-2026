@@ -1,0 +1,87 @@
+name: Terraform Pipeline
+
+on:
+  push:
+    branches:
+      - feature/resources
+      - main
+
+jobs:
+
+  # =========================
+  # FEATURE BRANCH - PLAN ONLY
+  # =========================
+  feature-plan:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/resources'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: ./environment/prod
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ./environment/prod
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./environment/prod
+        run: terraform plan
+
+
+  # =========================
+  # MAIN BRANCH - PLAN + APPLY
+  # =========================
+  main-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: ./environment/prod
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ./environment/prod
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./environment/prod
+        run: terraform plan
+
+      # Manual approval will be added here
+
+      - name: Terraform Apply
+        working-directory: ./environment/prod
+        run: terraform apply -auto-approve
