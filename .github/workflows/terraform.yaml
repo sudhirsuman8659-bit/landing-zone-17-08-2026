@@ -8,19 +8,20 @@ on:
 
 jobs:
 
-  # ============================
   # FEATURE - PLAN ONLY
-  # ============================
   feature-plan:
     runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/feature/resources'
 
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
@@ -40,19 +41,20 @@ jobs:
         run: terraform plan
 
 
-  # ============================
   # MAIN - PLAN
-  # ============================
   main-plan:
     runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/main'
 
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
@@ -72,9 +74,7 @@ jobs:
         run: terraform plan
 
 
-  # ============================
   # MAIN - APPLY
-  # ============================
   production-apply:
     runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/main'
@@ -84,11 +84,14 @@ jobs:
       name: production
 
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
