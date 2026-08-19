@@ -12,7 +12,7 @@ jobs:
   # FEATURE BRANCH - PLAN ONLY
   # ==========================================
   feature-plan:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/feature/resources'
 
     steps:
@@ -47,7 +47,7 @@ jobs:
   # MAIN BRANCH - PLAN
   # ==========================================
   main-plan:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/main'
 
     steps:
@@ -82,7 +82,7 @@ jobs:
   # MAIN BRANCH - APPLY
   # ==========================================
   production-apply:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/main'
     needs: main-plan
 
