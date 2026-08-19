@@ -1,0 +1,123 @@
+name: Backend Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      BACKEND_HOST: "4.240.11.158"
+      BACKEND_USER: "azureuser"
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Copy Backend Code
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.4.240.11.158 }}
+          username: ${{ env.azureuser }}
+          password: ${{ secrets.VM_PASSWORD }}
+          port: 22
+          source: "."
+          target: "/opt/todo-backend"
+          overwrite: true
+
+      - name: Deploy Backend
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.4.240.11.158 }}
+          username: ${{ env.azureuser }}
+          password: ${{ secrets.VM_PASSWORD }}
+          port: 22
+
+          script: |
+
+            set -e
+
+            echo "Updating packages..."
+
+            sudo apt-get update
+
+            echo "Installing Python..."
+
+            sudo apt-get install -y \
+              python3 \
+              python3-pip \
+              python3-venv \
+              curl \
+              unixodbc \
+              unixodbc-dev
+
+            echo "Installing Microsoft ODBC Driver 18..."
+
+            if ! dpkg -l | grep -q msodbcsql18; then
+
+              curl -sSL https://packages.microsoft.com/keys/microsoft.asc | \
+                sudo gpg --dearmor \
+                -o /usr/share/keyrings/microsoft-prod.gpg
+
+              echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | \
+                sudo tee /etc/apt/sources.list.d/microsoft-prod.list
+
+              sudo apt-get update
+
+              sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+
+            fi
+
+            echo "Setting up application..."
+
+            cd /opt/todo-backend
+
+            python3 -m venv venv
+
+            ./venv/bin/pip install --upgrade pip
+
+            if [ -f requirements.txt ]; then
+              ./venv/bin/pip install -r requirements.txt
+            fi
+
+            echo "Creating systemd service..."
+
+            sudo bash -c 'cat > /etc/systemd/system/todo-backend.service' <<EOF
+
+            [Unit]
+            Description=Todo FastAPI Backend
+            After=network.target
+
+            [Service]
+            User=${{ env.BACKEND_USER }}
+            WorkingDirectory=/opt/todo-backend
+            ExecStart=/opt/todo-backend/venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000
+            Restart=always
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+
+            EOF
+
+            sudo systemctl daemon-reload
+
+            sudo systemctl enable todo-backend
+
+            sudo systemctl restart todo-backend
+
+            sleep 5
+
+            echo "Backend status:"
+
+            sudo systemctl status todo-backend --no-pager
+
+            echo "Testing backend..."
+
+            curl -f http://localhost:8000/docs || true
+
+            echo "Backend deployment completed!"

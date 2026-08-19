@@ -1,0 +1,114 @@
+name: Frontend Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      FRONTEND_HOST: "20.193.243.44"
+      FRONTEND_USER: "azureuser"
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build React Application
+        run: npm run build
+
+      - name: Copy Build to Frontend VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.20.193.243.44 }}
+          username: ${{ env.azureuser }}
+          password: ${{ secrets.VM_PASSWORD }}
+          port: 22
+          source: "build/*"
+          target: "/tmp/todo-build"
+          strip_components: 1
+          overwrite: true
+
+      - name: Deploy Frontend
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.20.193.243.44 }}
+          username: ${{ env.azureuser }}
+          password: ${{ secrets.VM_PASSWORD }}
+          port: 22
+
+          script: |
+
+            set -e
+
+            echo "Installing Nginx..."
+
+            sudo apt-get update
+
+            sudo apt-get install -y nginx
+
+            echo "Preparing web directory..."
+
+            sudo mkdir -p /var/www/todoapp
+
+            sudo rm -rf /var/www/todoapp/*
+
+            sudo cp -r /tmp/todo-build/* /var/www/todoapp/
+
+            sudo chown -R www-data:www-data /var/www/todoapp
+
+            echo "Configuring Nginx..."
+
+            sudo bash -c 'cat > /etc/nginx/sites-available/todoapp' <<'EOF'
+
+            server {
+                listen 80;
+                listen [::]:80;
+
+                server_name _;
+
+                root /var/www/todoapp;
+
+                index index.html;
+
+                location / {
+                    try_files $uri $uri/ /index.html;
+                }
+            }
+
+            EOF
+
+            sudo rm -f /etc/nginx/sites-enabled/default
+
+            sudo ln -sf \
+              /etc/nginx/sites-available/todoapp \
+              /etc/nginx/sites-enabled/todoapp
+
+            echo "Testing Nginx configuration..."
+
+            sudo nginx -t
+
+            echo "Restarting Nginx..."
+
+            sudo systemctl enable nginx
+
+            sudo systemctl restart nginx
+
+            echo "Testing frontend..."
+
+            curl -I http://localhost
+
+            echo "Frontend deployment completed!"
