@@ -25,12 +25,25 @@ subnets = {
     address_prefixes     = ["10.0.1.0/24"]
 
   }
+  subnet_2 = {
+    name                 = "backend-subnet"
+    resource_group_name  = "rg-prod"
+    virtual_network_name = "vnet-sks"
+    address_prefixes     = ["10.0.2.0/24"]
+
+  }
 }
 
 public_ip = {
 
   pip_1 = {
     name                = "acceptanceTestPublicIp1"
+    resource_group_name = "rg-prod"
+    location            = "centralindia"
+    allocation_method   = "Static"
+  }
+   pip_2 = {
+    name                = "backendTestPublicIp1"
     resource_group_name = "rg-prod"
     location            = "centralindia"
     allocation_method   = "Static"
@@ -47,6 +60,14 @@ network_interface = {
     vnet_name           = "vnet-sks"
     pip_name            = "acceptanceTestPublicIp1"
   }
+   nic_2 = {
+    name                = "backend-nic"
+    location            = "centralindia"
+    resource_group_name = "rg-prod"
+    subnet_name         = "backend-subnet"
+    vnet_name           = "vnet-sks"
+    pip_name            = "backendTestPublicIp1"
+  }
 }
 vartual_machine = {
   vm_1 = {
@@ -56,7 +77,15 @@ vartual_machine = {
     size                            = "Standard_D2s_v3"
     admin_username                  = "azurerm"
     admin_password                  = "Vodafone@12345"
-    disable_password_authentication = ""
     nic_name                        = "example-nic"
+  }
+    vm_2 = {
+    name                            = "linux-vm2"
+    resource_group_name             = "rg-prod"
+    location                        = "centralindia"
+    size                            = "Standard_D2s_v3"
+    admin_username                  = "azurerm"
+    admin_password                  = "Vodafone@12345"
+    nic_name                        = "backend-nic"
   }
 }
