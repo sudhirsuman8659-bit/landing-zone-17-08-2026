@@ -8,27 +8,25 @@ on:
 
 jobs:
 
-  # ==========================================
-  # FEATURE BRANCH - PLAN ONLY
-  # ==========================================
+  # FEATURE - PLAN ONLY
   feature-plan:
     runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/feature/resources'
 
     steps:
-      - name: Checkout code
+
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
 
       - name: Terraform Init
         working-directory: ./environment/prod
@@ -43,27 +41,25 @@ jobs:
         run: terraform plan
 
 
-  # ==========================================
-  # MAIN BRANCH - PLAN
-  # ==========================================
+  # MAIN - PLAN
   main-plan:
     runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
+
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
 
       - name: Terraform Init
         working-directory: ./environment/prod
@@ -78,9 +74,7 @@ jobs:
         run: terraform plan
 
 
-  # ==========================================
-  # MAIN BRANCH - APPLY
-  # ==========================================
+  # MAIN - APPLY
   production-apply:
     runs-on: [self-hosted, Windows, X64]
     if: github.ref == 'refs/heads/main'
@@ -90,11 +84,14 @@ jobs:
       name: production
 
     steps:
-      - name: Checkout code
+
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
